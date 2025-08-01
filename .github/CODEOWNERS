@@ -1,0 +1,19 @@
+# CODEOWNERS file for shop-webapp repository
+# This file defines who must review changes to specific files or directories
+# before they can be merged into the main branch.
+
+# Global rule - all files require review from repository owner
+* @karthik18495
+
+# Critical files that require additional scrutiny
+*.js @karthik18495
+*.html @karthik18495
+*.json @karthik18495
+
+# GitHub Actions workflows require owner approval
+.github/ @karthik18495
+.github/workflows/ @karthik18495
+
+# Documentation can be reviewed by owner
+README.md @karthik18495
+*.md @karthik18495
