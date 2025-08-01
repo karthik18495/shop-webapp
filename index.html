@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shop Terminal</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+        #productDisplay { margin-top: 20px; display: none; }
+        img { max-width: 100%; height: auto; }
+        input, button { padding: 10px; font-size: 16px; margin-top: 10px; width: 100%; }
+    </style>
+</head>
+<body>
+    <h1>Product Lookup</h1>
+    <input type="text" id="codeInput" placeholder="Enter product code">
+    <button onclick="lookup()">Lookup</button>
+
+    <div id="productDisplay">
+        <img id="productImage" />
+        <p id="productName"></p>
+        <p id="productPrice"></p>
+        <button onclick="markSold()">Mark as Sold</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
