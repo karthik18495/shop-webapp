@@ -1,0 +1,160 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Validate HTML structure
+      run: |
+        echo "🔍 Validating HTML files..."
+        for file in *.html; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            # Check for DOCTYPE declaration
+            if ! grep -q "<!DOCTYPE" "$file"; then
+              echo "⚠️  Warning: $file missing DOCTYPE declaration"
+            fi
+            
+            # Check for basic HTML structure
+            if grep -q "<html" "$file" && grep -q "</html>" "$file" && grep -q "<head>" "$file" && grep -q "<body>" "$file"; then
+              echo "✅ $file has valid HTML structure"
+            else
+              echo "❌ $file missing required HTML tags"
+              exit 1
+            fi
+          fi
+        done
+        
+    - name: Validate JavaScript syntax
+      run: |
+        echo "🔍 Validating JavaScript files..."
+        for file in *.js; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            if node -c "$file"; then
+              echo "✅ $file syntax is valid"
+            else
+              echo "❌ $file has syntax errors"
+              exit 1
+            fi
+          fi
+        done
+        
+    - name: Validate JSON format
+      run: |
+        echo "🔍 Validating JSON files..."
+        for file in *.json; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            if python3 -m json.tool "$file" > /dev/null; then
+              echo "✅ $file is valid JSON"
+            else
+              echo "❌ $file contains invalid JSON"
+              exit 1
+            fi
+          fi
+        done
+        
+    - name: Check for security issues
+      run: |
+        echo "🔍 Checking for common security issues..."
+        
+        # Check for hardcoded secrets or sensitive data
+        if grep -r -i "password\|secret\|key\|token" --include="*.js" --include="*.json" --include="*.html" . | grep -v "CODEOWNERS"; then
+          echo "⚠️  Potential security issue: Found references to passwords, secrets, keys, or tokens"
+          echo "Please review the above findings to ensure no sensitive data is exposed"
+        else
+          echo "✅ No obvious security issues found"
+        fi
+        
+        # Check for eval() usage
+        if grep -r "eval(" --include="*.js" .; then
+          echo "⚠️  Security warning: eval() usage found - this can be dangerous"
+        fi
+        
+    - name: Verify file permissions
+      run: |
+        echo "🔍 Checking file permissions..."
+        # Ensure no files have executable permissions that shouldn't
+        if find . -name "*.html" -executable -o -name "*.json" -executable -o -name "*.md" -executable | grep -v ".git"; then
+          echo "⚠️  Warning: Found files with executable permissions that may not need them"
+        else
+          echo "✅ File permissions look good"
+        fi
+        
+    - name: Validate directory structure
+      run: |
+        echo "🔍 Validating directory structure..."
+        
+        # Check for required files
+        required_files=("index.html" "app.js" "products.json")
+        for file in "${required_files[@]}"; do
+          if [ -f "$file" ]; then
+            echo "✅ Found required file: $file"
+          else
+            echo "❌ Missing required file: $file"
+            exit 1
+          fi
+        done
+        
+        # Check images directory
+        if [ -d "images" ]; then
+          echo "✅ Images directory exists"
+        else
+          echo "⚠️  Warning: Images directory not found"
+        fi
+
+  accessibility-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Basic accessibility validation
+      run: |
+        echo "🔍 Checking basic accessibility features..."
+        
+        for file in *.html; do
+          if [ -f "$file" ]; then
+            echo "Checking accessibility in $file..."
+            
+            # Check for alt attributes on images
+            if grep -q "<img" "$file"; then
+              if grep "<img" "$file" | grep -q 'alt='; then
+                echo "✅ Images in $file have alt attributes"
+              else
+                echo "⚠️  Warning: Some images in $file may be missing alt attributes"
+              fi
+            fi
+            
+            # Check for lang attribute on html tag
+            if grep -q 'lang=' "$file"; then
+              echo "✅ $file has language declaration"
+            else
+              echo "⚠️  Warning: $file missing language declaration"
+            fi
+            
+            # Check for title tag
+            if grep -q "<title>" "$file"; then
+              echo "✅ $file has page title"
+            else
+              echo "⚠️  Warning: $file missing page title"
+            fi
+          fi
+        done

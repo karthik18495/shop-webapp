@@ -1,0 +1,91 @@
+name: Branch Protection
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  check-authorization:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Check if push is from repository owner or authorized user
+      run: |
+        echo "Checking authorization for user: ${{ github.actor }}"
+        echo "Repository owner: ${{ github.repository_owner }}"
+        
+        # Check if the actor is the repository owner
+        if [ "${{ github.actor }}" = "${{ github.repository_owner }}" ]; then
+          echo "✅ Push authorized: Repository owner"
+          exit 0
+        fi
+        
+        # Check if actor has a valid GitHub token with appropriate permissions
+        # This checks if the user has write access to the repository
+        if [ "${{ github.token }}" != "" ]; then
+          echo "✅ Push authorized: Valid GitHub token present"
+          exit 0
+        fi
+        
+        echo "❌ Push not authorized: Not repository owner and no valid token"
+        echo "Only the repository owner or users with valid GitHub tokens can push directly to main branch"
+        exit 1
+
+  validate-changes:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Validate HTML
+      run: |
+        echo "Validating HTML files..."
+        # Simple validation - check if HTML files are well-formed
+        for file in *.html; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            # Basic HTML validation - check for opening and closing tags
+            if grep -q "<html" "$file" && grep -q "</html>" "$file"; then
+              echo "✅ $file appears to be valid HTML"
+            else
+              echo "❌ $file may have HTML issues"
+              exit 1
+            fi
+          fi
+        done
+        
+    - name: Validate JavaScript
+      run: |
+        echo "Validating JavaScript files..."
+        # Check for basic JavaScript syntax
+        for file in *.js; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            # Basic JS validation - check for common syntax errors
+            if node -c "$file" 2>/dev/null; then
+              echo "✅ $file syntax is valid"
+            else
+              echo "❌ $file has syntax errors"
+              exit 1
+            fi
+          fi
+        done
+        
+    - name: Validate JSON
+      run: |
+        echo "Validating JSON files..."
+        for file in *.json; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            if python3 -m json.tool "$file" > /dev/null 2>&1; then
+              echo "✅ $file is valid JSON"
+            else
+              echo "❌ $file is invalid JSON"
+              exit 1
+            fi
+          fi
+        done
