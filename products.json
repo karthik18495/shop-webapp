@@ -1,0 +1,12 @@
+{
+  "A123": {
+    "name": "Red T-Shirt",
+    "price": "$20",
+    "image": "images/a123.jpg"
+  },
+  "B456": {
+    "name": "Blue Cap",
+    "price": "$12",
+    "image": "images/b456.jpg"
+  }
+}

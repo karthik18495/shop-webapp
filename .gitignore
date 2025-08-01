@@ -1,0 +1,23 @@
+*.html
+*.qodo
+
+*.log
+
+# Ignore all node_modules folders
+node_modules/   
+# Ignore all build directories
+build/
+dist/
+
+# Ignore all temporary files
+*.tmp
+*.temp
+
+# Ignore all compiled files
+*.o
+*.pyc
+*.class
+
+# Ignore all backup files
+*.bak
+*.swp
